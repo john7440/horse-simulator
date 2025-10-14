@@ -43,7 +43,7 @@ def generate_list(horse_number):
     return horse_list
 
 
-def simulate_course(horse_l,type_of_course):
+def simulate_course(horse_l):
     """
     This function simulates a course for each horse,
     every turn, we roll a dice that will determinate the distance
@@ -77,24 +77,26 @@ def simulate_course(horse_l,type_of_course):
                 modified_speed = modifiers[key]
 
                 if modified_speed  == 'DQ':
-                    print(f"Horse {horse['horse']} disqualified on turn {turn}")
+                    #print(f"Horse {horse['horse']} disqualified on turn {turn}")
                     horse['disqualified'] = True
                     horse['position'] = -1
                     continue
 
-                adjusted_dice = dice + modified_speed
-                adjusted_dice = max(1, min(adjusted_dice, 6))
+                adjusted_speed = dice + modified_speed
+                adjusted_speed = max(1, min(adjusted_speed, 6))
 
-                distance = base_speed[adjusted_dice]
-                horse['actual speed'] = adjusted_dice
+                distance = base_speed[adjusted_speed]
+                horse['actual speed'] = adjusted_speed
                 horse['position'] += distance
                 horse['history'].append(distance)
 
-    print('===============Course ended!========================')
     ranking = sorted(horse_l, key = lambda horse: horse['position'], reverse = True)
-    for index, horse in enumerate(ranking[:type_of_course]):
-        print(f'{index+1:2}. Horse : {horse["horse"]:2}  -> position: {horse["position"]}')
+    return ranking
 
+def print_out(rank,type_of_c):
+    print('========================Course ended!========================')
+    for index, horse in enumerate(rank[:type_of_c]):
+        print(f'{index+1:2}. Horse : {horse["horse"]:2}  -> position: {horse["position"]}')
 
 
 def main():
@@ -107,12 +109,12 @@ def main():
         if 12 <= number_of_horses <= 20:
             break
         else:
-            print("That is not a valid choice. Please try again. A number between 123 and 20")
+            print("That is not a valid choice. Please try again. A number between 12 and 20")
 
     horse_list = generate_list(number_of_horses)
     k = kind_of_course()
-
-    simulate_course(horse_list, k)
+    ranking = simulate_course(horse_list)
+    print_out(ranking, k)
 
 
 if __name__=='__main__':
