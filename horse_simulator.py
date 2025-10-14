@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import random
-from sys import base_prefix
 
 
 def kind_of_course():
@@ -10,8 +9,8 @@ def kind_of_course():
     This function ask user what kind of course does he want
     :return: the desired kind of course
     """
-    user_choice = int(input("What kind of course do you want? 3,4 or 5?"))
     while True:
+        user_choice = int(input("What kind of course do you want? 3,4 or 5?"))
         if user_choice == 3:
             return 3
         elif user_choice == 4:
@@ -40,7 +39,7 @@ def generate_list(horse_number):
     """
     horse_list = []
     for i in range(horse_number):
-        horse_list.append({'horse': i + 1 , 'position': 0 , 'history': [], 'actual speed':0})
+        horse_list.append({'horse': i + 1 , 'position': 0 , 'history': [], 'actual speed':0, 'disqualified': False})
     return horse_list
 
 
@@ -53,6 +52,7 @@ def simulate_course(horse_l,type_of_course):
     :return: the final ranking
     """
     turn = 0
+
     rolling_dice = [
         {'actual speed': 0, 'speed1': 0, 'speed2': +1, 'speed3': +1, 'speed4': +1, 'speed5': +2, 'speed6': +2},
         {'actual speed': 1, 'speed1': 0, 'speed2': 0, 'speed3': +1, 'speed4': +1, 'speed5': +1, 'speed6': +2},
@@ -61,10 +61,14 @@ def simulate_course(horse_l,type_of_course):
         {'actual speed': 4, 'speed1': -1, 'speed2': 0, 'speed3': 0, 'speed4': 0, 'speed5': +1, 'speed6': +1},
         {'actual speed': 5, 'speed1': -2, 'speed2': -1, 'speed3': 0, 'speed4': 0, 'speed5': 0, 'speed6': +1},
         {'actual speed': 6, 'speed1': -2, 'speed2': -1, 'speed3': 0, 'speed4': 0, 'speed5': 0, 'speed6': 'DQ'}]
+
     base_speed = {0: 0, 1: 23, 2: 46, 3: 69, 4: 92, 5: 115, 6: 138}
-    while all(horse['position'] < 2400 for horse in horse_l):
+
+    while any(not horse.get('disqualified', False) and horse['position'] < 2400 for horse in horse_l):
         turn += 1
         for horse in horse_l:
+            if horse['disqualified'] or horse['position'] >= 2400:
+                continue
             if horse['position'] < 2400:
                 dice = roll_dice()
                 current_speed = min(horse['actual speed'],6)
@@ -74,6 +78,7 @@ def simulate_course(horse_l,type_of_course):
 
                 if modified_speed  == 'DQ':
                     print(f"Horse {horse['horse']} disqualified on turn {turn}")
+                    horse['disqualified'] = True
                     horse['position'] = -1
                     continue
 
@@ -81,7 +86,7 @@ def simulate_course(horse_l,type_of_course):
                 adjusted_dice = max(1, min(adjusted_dice, 6))
 
                 distance = base_speed[adjusted_dice]
-                horse['actual speed'] = current_speed
+                horse['actual speed'] = adjusted_dice
                 horse['position'] += distance
                 horse['history'].append(distance)
 
@@ -97,10 +102,13 @@ def main():
     This is the main function.
     :return:
     """
-    number_of_horses = int(input("How many horses do you want to simulate? (12-20): "))
-    if not 12 <= number_of_horses <= 20:
-        print('Invalid Input')
-        return
+    while True:
+        number_of_horses = int(input("How many horses do you want to simulate? (12-20): "))
+        if 12 <= number_of_horses <= 20:
+            break
+        else:
+            print("That is not a valid choice. Please try again. A number between 123 and 20")
+
     horse_list = generate_list(number_of_horses)
     k = kind_of_course()
 
