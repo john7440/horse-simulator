@@ -3,6 +3,7 @@
 
 import random
 
+
 def display_race(horse_l, race_length=2400, bar_width=50):
     """
     This function is used to display the race of horse
@@ -14,12 +15,13 @@ def display_race(horse_l, race_length=2400, bar_width=50):
     print("\nRace state:")
     sorted_horses = sorted(horse_l, key=lambda h: h['position'], reverse=True)
     for horse in sorted_horses:
+        horse_icon = "🐎"
         if horse.get('disqualified', False):
-            print(f"Horse {horse['horse']:2} | {'X'*bar_width} | DISQUALIFIED")
+            print(f"Horse {horse['horse']:2} | {'X' * bar_width} | DISQUALIFIED")
         else:
             progress = int((horse['position'] / race_length) * bar_width)
             bar = '█' * progress + '-' * (bar_width - progress)
-            print(f"Horse {horse['horse']:2} | {bar} | {horse['position']:4}m")
+            print(f"{horse_icon} Horse {horse['horse']:2} | {bar} | {horse['position']:4}m")
 
 
 def kind_of_course():
@@ -36,8 +38,7 @@ def kind_of_course():
             else:
                 print("\nPlease enter a valid kind of result")
         except ValueError:
-            print("\nPlease enter a valid number (3,4 or 5)")
-
+            print("\nInvalid Input! Please enter a valid number (3,4 or 5)")
 
 
 def roll_dice():
@@ -59,7 +60,8 @@ def generate_list(horse_number):
     """
     horse_list = []
     for i in range(horse_number):
-        horse_list.append({'horse': i + 1 , 'position': 0 , 'history': [], 'actual speed':0, 'finish':None, 'disqualified': False})
+        horse_list.append({'horse': i + 1 , 'position': 0 , 'history': [], 'actual speed':0, 'finish':None, 'disqualified': None,
+                           'disqualified_turn': None})
     return horse_list
 
 
@@ -95,7 +97,7 @@ def simulate_course(horse_l):
         else:
             active_horses = []
             for horse in horse_l:
-                if horse['position'] >= 2400:
+                if horse['position'] >= 2400 or horse.get('disqualified', False):
                     active_horses.append(horse)
                     continue
 
@@ -108,6 +110,7 @@ def simulate_course(horse_l):
                 if modified_speed  == 'DQ':
                     print(f"Horse {horse['horse']} disqualified on turn {turn}")
                     horse['disqualified'] = True
+                    horse['disqualified_turn'] = turn
                     horse['position'] = -1
                     continue
 
