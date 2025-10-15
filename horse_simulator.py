@@ -60,7 +60,11 @@ def generate_list(horse_number):
     """
     horse_list = []
     for i in range(horse_number):
-        horse_list.append({'horse': i + 1 , 'position': 0 , 'history': [], 'actual speed':0, 'finish':None, 'disqualified': None,
+        horse_list.append({'horse': i + 1 ,
+                           'position': 0 ,
+                           'actual speed': 0,
+                           'finish':None,
+                           'disqualified': False,
                            'disqualified_turn': None})
     return horse_list
 
@@ -122,7 +126,6 @@ def simulate_course(horse_l):
                 horse['position'] += distance
                 if horse['position'] >= 2400 and horse['finish'] is None:
                     horse['finish'] = turn
-                horse['history'].append(distance)
 
                 active_horses.append(horse)
 
