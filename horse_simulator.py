@@ -4,6 +4,25 @@
 import random
 
 
+def display_race(horse_l, race_length=2400, bar_width=50):
+    """
+    This function is used to display the race of horse
+    :param horse_l: the sorted list of horses
+    :param race_length: length of the race
+    :param bar_width: the width of the bar
+    :return:
+    """
+    print("\nRace state:")
+    sorted_horses = sorted(horse_l, key=lambda h: h['position'], reverse=True)
+    for horse in sorted_horses:
+        if horse.get('disqualified', False):
+            print(f"Horse {horse['horse']:2} | {'X'*bar_width} | DISQUALIFIED")
+        else:
+            progress = int((horse['position'] / race_length) * bar_width)
+            bar = '█' * progress + '-' * (bar_width - progress)
+            print(f"Horse {horse['horse']:2} | {bar} | {horse['position']:4}m")
+
+
 def kind_of_course():
     """
     This function ask user what kind of course does he want
@@ -101,17 +120,9 @@ def simulate_course(horse_l):
 
                 active_horses.append(horse)
 
-                #print(f"Horse {horse['horse']} rolled {dice} → speed {adjusted_speed} → moved {distance}m → total {horse['position']}m")
-
         horse_l = active_horses
+        display_race(horse_l)
 
-        # We sort the list and print it, so we can see which horse is ahead
-        # each turn
-        print("\nPositions après ce tour :")
-        sorted_horses = sorted(horse_l, key=lambda horse: horse['position'], reverse=True)
-        for h in sorted_horses:
-            status = "DISQUALIFIED" if h['disqualified'] else f"{h['position']}m"
-            print(f"Horse {h['horse']:2} → {status}")
 
     ranking = sorted(horse_l, key = lambda horse: horse['position'], reverse = True)
     return ranking
