@@ -141,7 +141,10 @@ def print_out(rank,type_of_c , total_of_turns):
     :param type_of_c: type of course (tiercé, quarté or quinté)
     :return: formated ranking
     """
-    print('========================Course ended!========================')
+    print('\n=============================================================')
+    print('================       Race Finished!       =================')
+    print('=============================================================\n')
+    print('-----------------Final Ranking-----------------')
     for index, horse in enumerate(rank[:type_of_c]):
         if horse['finish'] is not None:
             time_in_second = horse['finish'] * 10
