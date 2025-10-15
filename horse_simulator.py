@@ -7,38 +7,67 @@ from colorama import Fore, Style, init
 init(autoreset=True)
 
 
-def display_race(horse_l, race_length=2400, bar_width=50, current_turn =None):
+def format_horse_bar(horse, race_length=2400, bar_width=50, current_turn =None):
     """
     This function is used to display the race of horse
     :param current_turn: the current turn of the race
-    :param horse_l: the sorted list of horses
+    :param horse: each horse
     :param race_length: length of the race
     :param bar_width: the width of the bar
     :return:
     """
-    print("\nRace state:")
+    horse_icon = "🐎"
+    horse_num = f"Horse {horse['horse']:2}"
+
+    # Disqualified at this turn
+    if horse['disqualified'] and horse['disqualified_turn'] == current_turn:
+        bar = Fore.RED + 'X' * bar_width
+        status = Fore.RED + 'DISQUALIFIED'
+
+    # If the horse is still in the race
+    elif not horse['disqualified'] and horse['position'] >= 0:
+        progress_ratio = horse['position'] / race_length
+        progress = max(0, min(int(progress_ratio * bar_width), bar_width))
+
+        # Dynamic colors for progress
+        if progress > bar_width * 0.8:
+             bar_color = Fore.GREEN
+        elif progress > bar_width * 0.5:
+            bar_color = Fore.BLUE
+        else:
+            bar_color = Fore.YELLOW
+
+        bar = bar_color + '█' * progress + Style.DIM + '-' * (bar_width - progress)
+        status = Fore.CYAN + f"{horse['position']:4}m".ljust(10)
+
+    # Disqualified at this turn, ignored after (next turn)
+    else:
+        return None
+
+    return f"{horse_icon} {horse_num} | {bar} | {status}"
+
+
+def display_race(horse_l, race_length=2400, bar_width=50, current_turn=None):
+    """
+    This function is used to display the race,
+    sort the list and print the race
+    :param horse_l: the list of horses
+    :param race_length: the length of the race
+    :param bar_width: the width of the bar
+    :param current_turn: the current turn of the race
+    :return: None
+    """
+    print(f"\n{Fore.MAGENTA}----------------🏁🏁🏁 Race state — Turn {current_turn} 🏁🏁🏁----------------\n")
     sorted_horses = sorted(horse_l, key=lambda h: h['position'], reverse=True)
 
     for horse in sorted_horses:
-        horse_icon = "🐎"
-        horse_num = f"Horse {horse['horse']:2}"
-
-        if horse['disqualified'] and horse['disqualified_turn'] == current_turn:
-            bar = Fore.RED + 'X' * bar_width
-            status = Fore.RED + 'DISQUALIFIED'
-
-        elif not horse['disqualified'] and horse['position'] >= 0:
-            progress = max(0, min(int((horse['position'] / race_length) * bar_width), bar_width))
-            bar = Fore.GREEN + '█' * progress + Style.DIM + '-' * (bar_width - progress)
-            status = Fore.CYAN + f"{horse['position']:4}m"
-
-        else:
-            continue
-
-        print(f"{horse_icon} {horse_num} | {bar} | {status}")
+        line = format_horse_bar(horse, race_length, bar_width, current_turn)
+        if line:
+            print(line)
 
 
-def kind_of_course():
+
+def kind_of_result():
     """
     This function ask user what kind of course does he want,
     verify if its valid then return the type of result desired.
@@ -108,9 +137,10 @@ def simulate_course(horse_l):
 
     while any(not h['disqualified'] and h['position'] < 2400 for h in horse_l):
         turn += 1
-        print(f"\n--- Turn {turn} ---")
-        choice = input("Press Enter to continue to the next turn (or type 'q' to quit): ")
+        print(f"\n----------------------- Turn {turn} ---------------------------")
+        choice = input("Press Enter to continue to the next turn (or 'Q' to quit): ").lower()
         if choice == 'q':
+            print('\nThank you for playing!')
             break
 
         for horse in horse_l:
@@ -124,7 +154,6 @@ def simulate_course(horse_l):
             modified = modifiers[key]
 
             if modified == 'DQ':
-                print(f"Horse {horse['horse']} disqualified on turn {turn}")
                 horse['disqualified'] = True
                 horse['disqualified_turn'] = turn
                 horse['position'] = -1
@@ -159,16 +188,18 @@ def print_out(rank,type_of_c , total_of_turns):
     :return: formated ranking
     """
     print('\n=============================================================')
-    print('================       Race Finished!       =================')
+    print('================🏁🏁🏁Race Finished!🏁🏁🏁=================')
     print('=============================================================\n')
     print('-----------------Final Ranking-----------------')
     medals = ['🥇', '🥈', '🥉']
-    for index, horse in enumerate(rank[:type_of_c]):
+
+    for index, horse in enumerate( rank[:type_of_c]):
         if horse['finish_turn'] is not None:
             time_in_second = horse['finish_turn'] * 10
             minutes = time_in_second //60
             secondes = time_in_second % 60
             formatted_time = f"{minutes}m {secondes:02}s"
+
         else:
             formatted_time = "Did Not Finished"
 
@@ -177,22 +208,28 @@ def print_out(rank,type_of_c , total_of_turns):
         print(f'{index + 1:2}. Horse {horse["horse"]:2} → Position: {horse["position"]:4}m → Time: {formatted_time}  {medal} ')
 
 
-def main():
-    """
-    This is the main function.
-    :return:
-    """
+def how_many_horses() -> int:
     while True:
         number_of_horses = int(input("How many horses do you want to simulate? (12-20): "))
         if 12 <= number_of_horses <= 20:
             break
         else:
             print("That is not a valid choice. Please try again. A number between 12 and 20")
+    return number_of_horses
 
+def main():
+    """
+    This is the main function.
+    It contains the multiples calls to other functions.
+    :return: None
+    """
+    number_of_horses = how_many_horses()
     horse_list = generate_list(number_of_horses)
-    k = kind_of_course()
+    k = kind_of_result()
     ranking, total_turns = simulate_course(horse_list)
     print_out(ranking, k,total_turns)
+
+
 
 
 if __name__=='__main__':
