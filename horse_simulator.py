@@ -2,11 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import random
+from colorama import Fore, Style, init
+# We use this to not have to reset the color each time we print
+init(autoreset=True)
 
 
-def display_race(horse_l, race_length=2400, bar_width=50):
+def display_race(horse_l, race_length=2400, bar_width=50, current_turn =None):
     """
     This function is used to display the race of horse
+    :param current_turn: the current turn of the race
     :param horse_l: the sorted list of horses
     :param race_length: length of the race
     :param bar_width: the width of the bar
@@ -14,14 +18,24 @@ def display_race(horse_l, race_length=2400, bar_width=50):
     """
     print("\nRace state:")
     sorted_horses = sorted(horse_l, key=lambda h: h['position'], reverse=True)
+
     for horse in sorted_horses:
         horse_icon = "🐎"
-        if horse.get('disqualified', False):
-            print(f"Horse {horse['horse']:2} | {'X' * bar_width} | DISQUALIFIED")
+        horse_num = f"Horse {horse['horse']:2}"
+
+        if horse['disqualified'] and horse['disqualified_turn'] == current_turn:
+            bar = Fore.RED + 'X' * bar_width
+            status = Fore.RED + 'DISQUALIFIED'
+
+        elif not horse['disqualified'] and horse['position'] >= 0:
+            progress = max(0, min(int((horse['position'] / race_length) * bar_width), bar_width))
+            bar = Fore.GREEN + '█' * progress + Style.DIM + '-' * (bar_width - progress)
+            status = Fore.CYAN + f"{horse['position']:4}m"
+
         else:
-            progress = int((horse['position'] / race_length) * bar_width)
-            bar = '█' * progress + '-' * (bar_width - progress)
-            print(f"{horse_icon} Horse {horse['horse']:2} | {bar} | {horse['position']:4}m")
+            continue
+
+        print(f"{horse_icon} {horse_num} | {bar} | {status}")
 
 
 def kind_of_course():
@@ -62,8 +76,8 @@ def generate_list(horse_number):
     for i in range(horse_number):
         horse_list.append({'horse': i + 1 ,
                            'position': 0 ,
-                           'actual speed': 0,
-                           'finish':None,
+                           'actual_speed': 0,
+                           'finish_turn':None,
                            'disqualified': False,
                            'disqualified_turn': None})
     return horse_list
@@ -79,64 +93,58 @@ def simulate_course(horse_l):
     """
     turn = 0
 
-    # The rules about speed and modifiers
+    # Speed modifiers
     rolling_dice = [
-        {'actual speed': 0, 'speed1': 0, 'speed2': +1, 'speed3': +1, 'speed4': +1, 'speed5': +2, 'speed6': +2},
-        {'actual speed': 1, 'speed1': 0, 'speed2': 0, 'speed3': +1, 'speed4': +1, 'speed5': +1, 'speed6': +2},
-        {'actual speed': 2, 'speed1': 0, 'speed2': 0, 'speed3': +1, 'speed4': +1, 'speed5': +1, 'speed6': +2},
-        {'actual speed': 3, 'speed1': -1, 'speed2': 0, 'speed3': 0, 'speed4': +1, 'speed5': +1, 'speed6': +1},
-        {'actual speed': 4, 'speed1': -1, 'speed2': 0, 'speed3': 0, 'speed4': 0, 'speed5': +1, 'speed6': +1},
-        {'actual speed': 5, 'speed1': -2, 'speed2': -1, 'speed3': 0, 'speed4': 0, 'speed5': 0, 'speed6': +1},
-        {'actual speed': 6, 'speed1': -2, 'speed2': -1, 'speed3': 0, 'speed4': 0, 'speed5': 0, 'speed6': 'DQ'}]
+        {'speed1': 0,  'speed2': +1, 'speed3': +1, 'speed4': +1, 'speed5': +2, 'speed6': +2},
+        {'speed1': 0,  'speed2':  0, 'speed3': +1, 'speed4': +1, 'speed5': +1, 'speed6': +2},
+        {'speed1': 0,  'speed2':  0, 'speed3': +1, 'speed4': +1, 'speed5': +1, 'speed6': +2},
+        {'speed1': -1, 'speed2':  0, 'speed3':  0, 'speed4': +1, 'speed5': +1, 'speed6': +1},
+        {'speed1': -1, 'speed2':  0, 'speed3':  0, 'speed4': 0,  'speed5': +1, 'speed6': +1},
+        {'speed1': -2, 'speed2': -1, 'speed3':  0, 'speed4': 0,  'speed5':  0, 'speed6': +1},
+        {'speed1': -2, 'speed2': -1, 'speed3':  0, 'speed4': 0,  'speed5':  0, 'speed6': 'DQ'}
+    ]
 
-    # A dict with correspondance between speed and distance
     base_speed = {0: 0, 1: 23, 2: 46, 3: 69, 4: 92, 5: 115, 6: 138}
 
-    while any(not horse.get('disqualified', False) and horse['position'] < 2400 for horse in horse_l):
+    while any(not h['disqualified'] and h['position'] < 2400 for h in horse_l):
         turn += 1
         print(f"\n--- Turn {turn} ---")
         choice = input("Press Enter to continue to the next turn (or type 'q' to quit): ")
         if choice == 'q':
             break
-        else:
-            active_horses = []
-            for horse in horse_l:
-                if horse['position'] >= 2400 or horse.get('disqualified', False):
-                    active_horses.append(horse)
-                    continue
 
-                dice = roll_dice()
-                current_speed = min(horse['actual speed'],6)
-                modifiers = rolling_dice[current_speed]
-                key = f'speed{dice}'
-                modified_speed = modifiers[key]
+        for horse in horse_l:
+            if horse['position'] >= 2400 or horse['disqualified']:
+                continue
 
-                if modified_speed  == 'DQ':
-                    print(f"Horse {horse['horse']} disqualified on turn {turn}")
-                    horse['disqualified'] = True
-                    horse['disqualified_turn'] = turn
-                    horse['position'] = -1
-                    continue
+            dice = roll_dice()
+            current_speed = min(horse['actual_speed'], 6)
+            modifiers = rolling_dice[current_speed]
+            key = f'speed{dice}'
+            modified = modifiers[key]
 
-                adjusted_speed = dice + modified_speed
-                adjusted_speed = max(1, min(adjusted_speed, 6))
+            if modified == 'DQ':
+                print(f"Horse {horse['horse']} disqualified on turn {turn}")
+                horse['disqualified'] = True
+                horse['disqualified_turn'] = turn
+                horse['position'] = -1
+                continue
 
-                distance = base_speed[adjusted_speed]
-                horse['actual speed'] = adjusted_speed
-                horse['position'] += distance
-                if horse['position'] >= 2400 and horse['finish'] is None:
-                    horse['finish'] = turn
+            new_speed = max(1, min(dice + modified, 6))
+            horse['actual_speed'] = new_speed
+            horse['position'] += base_speed[new_speed]
 
-                active_horses.append(horse)
+            if horse['position'] >= 2400 and horse['finish_turn'] is None:
+                horse['finish_turn'] = turn
 
-        horse_l = active_horses
-        display_race(horse_l)
+        display_race(horse_l, current_turn=turn)
 
+    # Final ranking: sorted by order then position
     ranking = sorted(
         horse_l,
-        key=lambda horse: (
-            horse['finish'] if horse['finish'] is not None else float('inf'),
-            -horse['position']
+        key=lambda h: (
+            h['finish_turn'] if h['finish_turn'] is not None else float('inf'),
+            -h['position']
         )
     )
     return ranking, turn
@@ -156,8 +164,8 @@ def print_out(rank,type_of_c , total_of_turns):
     print('-----------------Final Ranking-----------------')
     medals = ['🥇', '🥈', '🥉']
     for index, horse in enumerate(rank[:type_of_c]):
-        if horse['finish'] is not None:
-            time_in_second = horse['finish'] * 10
+        if horse['finish_turn'] is not None:
+            time_in_second = horse['finish_turn'] * 10
             minutes = time_in_second //60
             secondes = time_in_second % 60
             formatted_time = f"{minutes}m {secondes:02}s"
