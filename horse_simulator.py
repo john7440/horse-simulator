@@ -24,19 +24,20 @@ def display_race(horse_l, race_length=2400, bar_width=50):
 
 def kind_of_course():
     """
-    This function ask user what kind of course does he want
-    :return: the desired kind of course
+    This function ask user what kind of course does he want,
+    verify if its valid then return the type of result desired.
+    :return: the desired kind of result
     """
     while True:
-        user_choice = int(input("What kind of course do you want? 3,4 or 5?"))
-        if user_choice == 3:
-            return 3
-        elif user_choice == 4:
-            return 4
-        elif user_choice == 5:
-            return 5
-        else:
-            print("That is not a valid choice")
+        try:
+            user_choice = int(input("\nWhich kind of result do you want (3,4 or 5)? "))
+            if 3 <= user_choice <= 5:
+                return user_choice
+            else:
+                print("\nPlease enter a valid kind of result")
+        except ValueError:
+            print("\nPlease enter a valid number (3,4 or 5)")
+
 
 
 def roll_dice():
