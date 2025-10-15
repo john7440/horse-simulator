@@ -73,8 +73,10 @@ def simulate_course(horse_l):
         if choice == 'q':
             break
         else:
+            active_horses = []
             for horse in horse_l:
-                if horse['disqualified'] or horse['position'] >= 2400:
+                if horse['position'] >= 2400:
+                    active_horses.append(horse)
                     continue
 
                 dice = roll_dice()
@@ -84,9 +86,9 @@ def simulate_course(horse_l):
                 modified_speed = modifiers[key]
 
                 if modified_speed  == 'DQ':
-                    #print(f"Horse {horse['horse']} disqualified on turn {turn}")
+                    print(f"Horse {horse['horse']} disqualified on turn {turn}")
                     horse['disqualified'] = True
-                    horse['position'] = -1
+                    # We continue to not add the disqualified horses to our list
                     continue
 
                 adjusted_speed = dice + modified_speed
@@ -97,7 +99,19 @@ def simulate_course(horse_l):
                 horse['position'] += distance
                 horse['history'].append(distance)
 
-                print(f"Horse {horse['horse']} rolled {dice} → speed {adjusted_speed} → moved {distance}m → total {horse['position']}m")
+                active_horses.append(horse)
+
+                #print(f"Horse {horse['horse']} rolled {dice} → speed {adjusted_speed} → moved {distance}m → total {horse['position']}m")
+
+        horse_l = active_horses
+
+        # We sort the list and print it, so we can see which horse is ahead
+        # each turn
+        print("\nPositions après ce tour :")
+        sorted_horses = sorted(horse_l, key=lambda horse: horse['position'], reverse=True)
+        for h in sorted_horses:
+            status = "DISQUALIFIED" if h['disqualified'] else f"{h['position']}m"
+            print(f"Horse {h['horse']:2} → {status}")
 
     ranking = sorted(horse_l, key = lambda horse: horse['position'], reverse = True)
     return ranking
