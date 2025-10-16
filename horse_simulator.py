@@ -208,12 +208,15 @@ def final_ranking(rank, type_of_c):
 
 def how_many_horses() -> int:
     while True:
-        number_of_horses = int(input("How many horses do you want to simulate? (12-20): "))
-        if 12 <= number_of_horses <= 20:
-            break
-        else:
+        try:
+            number_of_horses = int(input("How many horses do you want to simulate? (12-20): "))
+            if 12 <= number_of_horses <= 20:
+                return number_of_horses
+            else:
+                print("That is not a valid choice. Please try again. A number between 12 and 20")
+        except ValueError:
             print("That is not a valid choice. Please try again. A number between 12 and 20")
-    return number_of_horses
+
 
 
 def main():
