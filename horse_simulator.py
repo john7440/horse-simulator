@@ -9,12 +9,13 @@ init(autoreset=True)
 
 def format_horse_bar(horse, race_length=2400, bar_width=50, current_turn =None):
     """
-    This function is used to display the race of horse
-    :param current_turn: the current turn of the race
-    :param horse: each horse
-    :param race_length: length of the race
-    :param bar_width: the width of the bar
-    :return:
+    This function is used to format the display of the race,
+    using icon and dynamic colors accordingly to the progress.
+    :param current_turn: the current turn of the race.
+    :param horse: each horse.
+    :param race_length: length of the race.
+    :param bar_width: the width of the displayed bar.
+    :return: a formated string.
     """
     horse_icon = "🐎"
     horse_num = f"Horse {horse['horse']:2}"
@@ -29,7 +30,7 @@ def format_horse_bar(horse, race_length=2400, bar_width=50, current_turn =None):
         progress_ratio = horse['position'] / race_length
         progress = max(0, min(int(progress_ratio * bar_width), bar_width))
 
-        # Dynamic colors for progress
+        # Dynamic colors for progress at 50 and 80%
         if progress > bar_width * 0.8:
              bar_color = Fore.GREEN
         elif progress > bar_width * 0.5:
@@ -40,7 +41,7 @@ def format_horse_bar(horse, race_length=2400, bar_width=50, current_turn =None):
         bar = bar_color + '█' * progress + Style.DIM + '-' * (bar_width - progress)
         status = Fore.CYAN + f"{horse['position']:4}m".ljust(10)
 
-    # Disqualified at this turn, ignored after (next turn)
+    # Ignored after (next turn)
     else:
         return None
 
@@ -50,12 +51,12 @@ def format_horse_bar(horse, race_length=2400, bar_width=50, current_turn =None):
 def display_race(horse_l, race_length=2400, bar_width=50, current_turn=None):
     """
     This function is used to display the race,
-    sort the list and print the race
-    :param horse_l: the list of horses
-    :param race_length: the length of the race
-    :param bar_width: the width of the bar
-    :param current_turn: the current turn of the race
-    :return: None
+    sort the list and print the race.
+    :param horse_l: the list of horses.
+    :param race_length: the length of the race.
+    :param bar_width: the width of the bar.
+    :param current_turn: the current turn of the race.
+    :return: print the race.
     """
     print(f"\n{Fore.MAGENTA}----------------🏁🏁🏁 Race state — Turn {current_turn} 🏁🏁🏁----------------\n")
     sorted_horses = sorted(horse_l, key=lambda h: h['position'], reverse=True)
@@ -68,25 +69,25 @@ def display_race(horse_l, race_length=2400, bar_width=50, current_turn=None):
 
 def kind_of_result():
     """
-    This function ask user what kind of course does he want,
+    This function ask user what kind of result does he want,
     verify if its valid then return the type of result desired.
-    :return: the desired kind of result
+    :return: the desired kind of result.
     """
     while True:
         try:
-            user_choice = int(input("\nWhich kind of result do you want (3,4 or 5)? "))
+            user_choice = int(input("\nHow many horses do you want in the final ranking (3,4 or 5)? "))
             if 3 <= user_choice <= 5:
                 return user_choice
             else:
-                print("\nPlease enter a valid kind of result")
+                print("\nPlease enter a valid kind of result (3,4 or 5)")
         except ValueError:
             print("\nInvalid Input! Please enter a valid number (3,4 or 5)")
 
 
 def roll_dice():
     """
-    This fonction simulate a random dice roll between 1 and 6.
-    :return: a number between 1 and 6.
+    This function simulate a random dice roll between 1 and 6.
+    :return: a random number between 1 and 6.
     """
     random_number = random.randint(1,6)
     return random_number
@@ -96,7 +97,7 @@ def generate_horses(horse_number):
     """
     This function generates a list of horse (dict),
     each of them have a number, their actual speed,
-    the finish turn,the disqualified status and turn.
+    the finish turn, the disqualified status and turn.
     :param horse_number: the number of horses chosen by user.
     :return: a list of dictionaries where each dictionary represents one horse.
     """
@@ -114,7 +115,7 @@ def generate_horses(horse_number):
 def simulate_course(horse_l):
     """
     This function simulates a race with each horse,
-    every turn, rolling a dice that will determinate the distance
+    every turn, rolling a die that will determinate the distance
     the horse will do based on his actual speed.
     :param horse_l: the list of dictionaries where each dictionary represents one horse.
     :return: the final ranking sorted.
@@ -178,12 +179,13 @@ def simulate_course(horse_l):
     return ranking, turn
 
 
-def final_ranking(rank, type_of_c):
+def final_ranking(rank, type_of_race):
     """
-    This function prints out the final ranking and attribute medals.
-    :param rank: the ranking generated by simulate_course()
-    :param type_of_c: type of course (tiercé, quarté or quinté)
-    :return: formated ranking
+    This function prints out the final ranking and attribute medals to
+    the first 3 horses.
+    :param rank: the ranking generated by simulate_course().
+    :param type_of_race: 3,4 or 5 (tiercé, quarté or quinté).
+    :return: formated ranking.
     """
     print('\n=============================================================')
     print('================🏁🏁🏁Race Finished!🏁🏁🏁=================')
@@ -191,7 +193,7 @@ def final_ranking(rank, type_of_c):
     print('-----------------Final Ranking-----------------')
     medals = ['🥇', '🥈', '🥉']
 
-    for index, horse in enumerate( rank[:type_of_c]):
+    for index, horse in enumerate(rank[:type_of_race]):
         if horse['finish_turn'] is not None:
             time_in_second = horse['finish_turn'] * 10
             minutes = time_in_second //60
@@ -207,6 +209,11 @@ def final_ranking(rank, type_of_c):
 
 
 def how_many_horses() -> int:
+    """
+    This function ask user to input how many horses there want to simulate,
+    then it check the validity of the input.
+    :return: the number of horses desired.
+    """
     while True:
         try:
             number_of_horses = int(input("How many horses do you want to simulate? (12-20): "))
@@ -218,12 +225,10 @@ def how_many_horses() -> int:
             print("That is not a valid choice. Please try again. A number between 12 and 20")
 
 
-
 def main():
     """
     This is the main function.
     It contains the multiples calls to other functions.
-    :return: None
     """
     number_of_horses = how_many_horses()
     horse_list = generate_horses(number_of_horses)
